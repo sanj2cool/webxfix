@@ -12,6 +12,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $postData = $_POST;
     $tableColumns = getExistingColumns($tableName);
 
+    $newColumns = [
+        'skipped' => 'TEXT',  // Column name => Data type
+        'call_name' => 'TEXT'
+    ];    
+
+    //update table if columns missing
+    $columnsAdded = false;
+    foreach ($newColumns as $column => $type) {
+        if (!columnExists($tableName, $column, $SB_CONNECTION)) {
+            $alterTableQuery = "ALTER TABLE `$tableName` ADD `$column` $type";
+            $SB_CONNECTION->query($alterTableQuery);
+            $columnsAdded = true;
+        } 
+    }
+
+    // Freshly fetch table columns if new columns were added
+    if ($columnsAdded) {
+        $tableColumns = getExistingColumns($tableName);
+    }
+
     $leadId = isset($postData['id']) ? intval($postData['id']) : null;
     if ($leadId === null) {
         die('No ID provided.');
@@ -54,29 +74,48 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     //capture the audio file from the form
-    $audio_file = $_FILES["uploadCall"];  
-    
+    $audio_file = $_FILES["uploadCall"];     
+  
     // Allowed file types
     $allowed_types = ["audio/mpeg", "audio/mp3", "audio/wav"];
-    
-    
+    $mimeToExtension = [
+        'audio/mpeg' => '.mp3',
+        'audio/mp3' => '.mp3',
+        'audio/wav' => '.wav'
+    ];
+
     $companyNameQuery = "SELECT `company_name` FROM `$tableName` WHERE `id` = $leadId FOR UPDATE";
     $companyNameResult = $SB_CONNECTION->query($companyNameQuery);
     $companyNameRow = $companyNameResult->fetch_assoc();    
-   
+    
     //authenticate the type of the file
-    if (in_array($audio_file["type"], $allowed_types)) {
-
-        // Move the uploaded file to the server
-        $directory = "public/calls/";
-        $fileName = $companyNameRow['company_name']." - ".time();
-        $target_file = $directory . $fileName . basename($audio_file["name"]);      
-
-        move_uploaded_file($audio_file["tmp_name"], $target_file);
-
-        $updateColumns['call_name'] = $fileName." - ".basename($audio_file["name"]);       
+    if (isset($_FILES['uploadCall']) && $_FILES['uploadCall']['error'] == UPLOAD_ERR_OK) {
+        $extension = isset($mimeToExtension[$audio_file["type"]]) ? $mimeToExtension[$audio_file["type"]] : '';
+        $tmpFilePath = $_FILES['uploadCall']['tmp_name'];
+        $fileName = basename($_FILES['uploadCall']['name']);
+        $uploadDir = 'uploads/appointment-setting/';
+        $rename = trim(strval($companyNameRow['company_name']));
         
+        $destination = $uploadDir  . date('Ymd')."-". $rename .  $extension;
+
+        // Check if the upload directory exists
+        if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0777, true);
+        }
+
+        // Check if the upload directory is writable
+        if (!is_writable($uploadDir)) {
+            
+            print_r("Upload directory is not writable.");
+            exit;
+        }
+
+        // Move the uploaded file
+        move_uploaded_file($tmpFilePath, $destination);
+
+        $updateColumns['call_name'] = date('Ymd')."-". $rename .  $extension;
     }
+    
 
     if(!isset($postData['skipped'])){
         $updateColumns['locked_status'] = 2; //disable load again

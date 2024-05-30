@@ -1,10 +1,13 @@
 <?php
+
+
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 // Report all errors except E_WARNING
 error_reporting(E_ALL & ~E_WARNING & ~E_DEPRECATED);
-
+/**
 // Google Apps Script Web App URL
+
 $googleAppsScriptURL = "https://script.google.com/macros/s/AKfycbz-Ty5jUSwk9Ji2WUjxlSaM4aBb8mNDnm4wI1CJMwENc5kK6IJbaR39HNqhOwyBs03X/exec";
 
 $encryption_key = 'This is password yeah 9594';
@@ -23,7 +26,7 @@ function decrypt($ciphertext_base64, $key) {
     $plaintext = openssl_decrypt($ciphertext, 'aes-256-cbc', $key, 0, $iv); // Decrypt the ciphertext
     return $plaintext; // Return the original plaintext
 }
-
+**/
 
 /* The name of the database */
 define('SB_DB_NAME', 'phpmails');
@@ -39,3 +42,10 @@ define('SB_DB_HOST', 'localhost');
 
 /* MySQL port (optional) */
 define('SB_DB_PORT', '');
+
+/* SMTP SERVER */
+define('SB_SMTP_SERVER', 'smtp.hostinger.com');
+/* SMTP USERNAME */
+define('SB_SMTP_USER', 'contact@tourtideplanner.com');
+/* SMTP PASWORD */
+define('SB_SMTP_PASSWORD', 'Sanju#08757');

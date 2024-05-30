@@ -7,7 +7,7 @@ use PHPMailer\PHPMailer\Exception;
 
 // Load Composer's autoloader
 //require './vendor/autoload.php';
-require __DIR__ . '/../vendor/autoload.php';
+require __DIR__ . '/vendor/autoload.php';
 
 function sendMail($to, $subject, $body, $fromEmail, $fromName, $smtpHost, $smtpPort, $smtpUsername, $smtpPassword, $smtpSecure = 'ssl') {
     $mail = new PHPMailer(true); // Passing `true` enables exceptions
